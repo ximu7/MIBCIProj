@@ -64,9 +64,8 @@ class TrainModelWindow(wx.Dialog):
         data_x, data_y = self.gather_data()
         clf = Classification()
         clf.train_model(data_x, data_y)
-        f1 = open(self.save_model_path, 'wb')
-        pickle.dump(clf, f1)
-        f1.close()
+        with open(self.save_model_path, 'wb') as f:
+            pickle.dump(clf, f)
         self.statusLabel.SetLabel('模型训练完成。')
 
 

@@ -13,6 +13,7 @@ class Processor(object):
         self.save_path = main_cfg.subject.get_date_dir()
         self.online_timer = RepeatingTimer(0.1, self.online_run)
         self.signal = None
+        self.ns_signal = None
         self.predict_state = False
         self.is_feedback = False
         self.trial_num = 0
@@ -41,13 +42,13 @@ class Processor(object):
             self.predict_state = False
             self.get_result_log()
             return
-        if stim == StimType.ExperimentStop and self.is_online:
+        if stim == StimType.ExperimentStop:
             self.save_log()
 
     def online_run(self):
         if self.predict_state:
-            signal = self.pybus.publish(self, BCIEvent.readns, duration=500)
-            result = self.clf.online_predict(signal)
+            self.pybus.publish(self, BCIEvent.readns, self, duration=500)
+            result = self.clf.online_predict(self.ns_signal)
             predict_right = 1 if result == self.label_y else 0
             self.right_num_onerun.append(predict_right)
             if self.is_feedback and (len(self.right_num_onerun) == 1 or self.right_num_onerun[-2] != predict_right):
@@ -64,11 +65,11 @@ class Processor(object):
         one_run_log = '\ntrial ' + str(self.trial_num) + ':  ' + 'cue:' + str(self.label) + \
                       '\nthis run acc:' + str(one_run_acc) + ', epoch num:' + str(epoch_num) + \
                       '\nall runs acc:' + str(all_acc)
-        print(one_run_log)
         self.result_log.append(one_run_log)
+        print(one_run_log)
 
     def save_log(self):
         if self.is_online:
-            f = open(strftime(self.save_path + "//onlineResult_%Y%m%d_%H%M_%S.txt"), 'a')
-            f.writelines(self.result_log)
-            f.close()
+            path = strftime(self.save_path + "//onlineResult_%Y%m%d_%H%M_%S.txt")
+            with open(path, 'a') as f:
+                f.writelines(self.result_log)

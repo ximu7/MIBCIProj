@@ -12,7 +12,7 @@ def CARFilter(data_x):
     """
     channel_num = data_x.shape[1]
     after_car_data_x = np.zeros(data_x.shape)
-    if len(data_x.shape) == 3:
+    if data_x.ndim == 3:
         trial_size = data_x.shape[2]
         for j in range(trial_size):
             channel_sum = np.zeros(data_x.shape[0])

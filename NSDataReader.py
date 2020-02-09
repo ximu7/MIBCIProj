@@ -105,8 +105,8 @@ class NSDataReaderRandom(object):
         self.signal.append(data)
         self.data_time.append(time())
 
-    def get_signal(self, duration=None):
-        return np.array(self.signal[duration] if duration else self.signal)
+    def get_ns_signal(self, publisher, duration=None):
+        publisher.ns_signal = np.array(self.signal[duration] if duration else self.signal)
 
     def get_head_settings(self):
         return {'sampleRate': self.fs, 'channel_num': self.ch_num, 'channel_list': []}

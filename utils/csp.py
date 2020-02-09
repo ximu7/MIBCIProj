@@ -55,9 +55,9 @@ def csp_spatial_filter(data_x, csp_proj_matrix):
             空间滤波后的数据取log作为特征
     """
     feature_len = csp_proj_matrix.shape[0]
-    if len(data_x.shape) == 3:  # 多个trial
+    if data_x.ndim == 3:  # 多个trial
         trial_size = data_x.shape[2]
-        if len(csp_proj_matrix.shape) == 3:  # 多分类
+        if csp_proj_matrix.ndim == 3:  # 多分类
             class_num = csp_proj_matrix.shape[2]
             x_after_csp = np.zeros([trial_size, feature_len*class_num])
             for i in range(class_num):
@@ -68,7 +68,7 @@ def csp_spatial_filter(data_x, csp_proj_matrix):
             for i in range(trial_size):
                 x_after_csp[i, :] = _get_feature(csp_proj_matrix, data_x[:, :, i])
     else:  # 单个trial
-        if len(csp_proj_matrix.shape) == 3:  # 多分类
+        if csp_proj_matrix.ndim == 3:  # 多分类
             class_num = csp_proj_matrix.shape[2]
             x_after_csp = np.zeros([1, feature_len*class_num])
             for i in range(class_num):

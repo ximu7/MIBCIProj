@@ -142,9 +142,8 @@ class MainWindow(wx.Frame):
 
     def on_save_param(self, event):
         if self.subject.subject_name:
-            output = open(self.subject.get_param_path(), 'wb')
-            pickle.dumps(self.subject, output)
-            output.close()
+            with open(self.subject.get_param_path(), 'wb') as f:
+                pickle.dumps(self.subject, f)
             self.statusBar.SetStatusText(r'参数文件保存成功')
         else:
             self.statusBar.SetStatusText(r'未选择被试')

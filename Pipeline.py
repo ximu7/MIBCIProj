@@ -20,7 +20,8 @@ class Pipeline(object):
         self.save_data_path = main_cfg.subject.get_date_dir()
         self.filename = 'online' if main_cfg.is_online else 'acquire'
         self.stim_cfg = main_cfg.stim_cfg
-        pybus.subscribe(self.processor, BCIEvent.readns, self.ns_reader, self.ns_reader.get_signal)
+        self.ns_signal = None
+        pybus.subscribe(self.processor, BCIEvent.readns, self.ns_reader, self.ns_reader.get_ns_signal)
         pybus.subscribe(self.stim, BCIEvent.change_stim, self.processor, self.processor.handle_stim)
         pybus.subscribe(self.stim, BCIEvent.change_stim, self.cue, self.cue.handle_stim)
         pybus.subscribe(self.stim, BCIEvent.change_stim, main_cfg.exo, main_cfg.exo.handle_stim)
@@ -40,10 +41,10 @@ class Pipeline(object):
 
     def save_data(self):
         ns_header = self.ns_reader.get_head_settings()
-        signal = self.ns_reader.get_signal()
+        self.ns_reader.get_ns_signal(self)
         data_time = self.ns_reader.data_time
         first_time, last_time = data_time[0], data_time[-1]
-        data_time = np.array(np.linspace(0, last_time - first_time, signal.shape[0]))
+        data_time = np.linspace(0, last_time - first_time, self.ns_signal.shape[0])
         class_list = np.array(self.stim.class_list)
         class_list[:, 0] = class_list[:, 0] - first_time
         event_list = np.array(self.stim.event_list)
@@ -60,7 +61,7 @@ class Pipeline(object):
                     events[i, 0] = j - 1 if v1 < v2 else j
                     k = j - 1
                     break
-        np.savez(strftime(self.save_data_path + "//" + self.filename + "NS_%Y%m%d_%H%M_%S"),
-                 signal=signal, ns_header=ns_header, event_id=event_id, events=events,
+        np.savez_compressed(strftime(self.save_data_path + "//" + self.filename + "NS_%Y%m%d_%H%M_%S"),
+                 signal=self.ns_signal, ns_header=ns_header, event_id=event_id, events=events,
                  class_list=class_list, event_list=event_list)
 
