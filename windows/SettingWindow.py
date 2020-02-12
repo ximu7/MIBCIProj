@@ -17,7 +17,7 @@ class SettingWindow(wx.Dialog):
         grid_sizer0 = wx.FlexGridSizer(cols=3, vgap=10, hgap=1)
         for i in range(len(classStimList)):
             self.event_cb_list.append(wx.CheckBox(panel, label=classStimList[i]))
-            self.event_cb_list[i].SetValue(classStimList[i] in self.stim_cfg.class_stim_list)
+            self.event_cb_list[i].SetValue(classStimList[i] in self.stim_cfg.class_list)
             grid_sizer0.Add(self.event_cb_list[i], 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
 
         grid_sizer1 = wx.FlexGridSizer(cols=2, vgap=10, hgap=1)

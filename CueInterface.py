@@ -24,6 +24,7 @@ class CueInterface(object):
         # self.parentDir = os.path.abspath(os.getcwd())
         self.parentDir = os.getcwd()
         self.gaze_pos = {'left': 'Left', 'right': 'Right', 'rest': 'Center'}
+        self.predict_one_trial = []
 
     def start(self):
         self.connect()
@@ -61,6 +62,7 @@ class CueInterface(object):
             return
         if stim == StimType.StartOfTrial:
             self.send_clear()
+            self.predict_one_trial = []
             return
         if stim == StimType.EndOfTrial:
             self.send_stim(None, self.stop_sound_path, False)
@@ -85,7 +87,10 @@ class CueInterface(object):
                 continue
 
     def online_feedback(self, predict):
-        self.send_animation_ctrl(bool(1-predict))
+        self.send_animation_ctrl(is_stop=bool(1-predict))
+        self.predict_one_trial.append(predict)
+        score = sum(self.predict_one_trial)/len(self.predict_one_trial) if self.predict_one_trial else 0
+        self.send_progress(score)
 
     def disconnect(self):
         self.pybus.publish(self, BCIEvent.cue_disconnect)
