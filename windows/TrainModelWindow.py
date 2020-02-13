@@ -53,17 +53,17 @@ class TrainModelWindow(wx.Dialog):
             if train_data_path[i] == '':
                 train_data_path.remove(train_data_path[i])
         train_data_path = list(set(train_data_path))
-        data_x_gather, data_y_gather = loadnpz(train_data_path[0])
+        data_x_gather, data_y_gather, fs = loadnpz(train_data_path[0])
         for i in range(1, len(train_data_path)):
-            data_x, data_y = loadnpz(train_data_path[i])  # x:(sample, channal, trial)  y:(trial,)
+            data_x, data_y, _ = loadnpz(train_data_path[i])  # x:(sample, channal, trial)  y:(trial,)
             data_x_gather = np.concatenate((data_x_gather, data_x), axis=2)
             data_y_gather = np.concatenate((data_y_gather, data_y), axis=0)
-        return data_x_gather, data_y_gather
+        return data_x_gather, data_y_gather, fs
 
     def on_train_model(self, event):
-        data_x, data_y = self.gather_data()
+        data_x, data_y, fs = self.gather_data()
         clf = Classification()
-        clf.train_model(data_x, data_y)
+        clf.train_model(data_x, data_y, fs)
         with open(self.save_model_path, 'wb') as f:
             pickle.dump(clf, f)
         self.statusLabel.SetLabel('模型训练完成。')

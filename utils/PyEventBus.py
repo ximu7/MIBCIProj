@@ -17,7 +17,9 @@ class PyEventBus(object):
     def publish(self, publisher, event_name, *args, **kwargs):
         for listener in self.subscriptions.keys():
             if self._has_subscription(publisher, event_name, listener):
-                self.subscriptions[listener][event_name][publisher](*args, **kwargs)
+                result = self.subscriptions[listener][event_name][publisher](*args, **kwargs)
+                if result:
+                    return result
 
     def _has_subscription(self, publisher, event_name, listener):
         return listener in self.subscriptions and \

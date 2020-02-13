@@ -142,8 +142,9 @@ class MainWindow(wx.Frame):
 
     def on_save_param(self, event):
         if self.subject.subject_name:
-            with open(self.subject.get_param_path(), 'wb') as f:
-                pickle.dumps(self.subject, f)
+            output = open(self.subject.get_param_path(), 'wb')
+            pickle.dumps(self.subject, output)
+            output.close()
             self.statusBar.SetStatusText(r'参数文件保存成功')
         else:
             self.statusBar.SetStatusText(r'未选择被试')
@@ -160,6 +161,7 @@ class MainWindow(wx.Frame):
         tag, self.is_online = ('校准', False) if session_type == 'acquisition' else ('训练', True)
         msg_dialog = wx.MessageDialog(self, "是否开始【" + tag + "任务】?", tag+"任务开始", wx.OK | wx.CANCEL | wx.CENTRE)
         if msg_dialog.ShowModal() == wx.ID_OK:
+            self.exo.is_online = self.is_online
             pipline = Pipeline(self)
             pipline.start()
         else:

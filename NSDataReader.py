@@ -71,14 +71,14 @@ class NSDataReader(object):
         self.repeat_timer.cancel()
         self.socket.close()
 
-    def get_signal(self, duration=None):
+    def get_ns_signal(self, duration=None):
         return np.array(self.signal[duration] if duration else self.signal)
 
     def get_head_settings(self):
         channel_list = ['FP1', 'FPz', 'FP2', 'AF3', 'AF4', 'F5', 'F3', 'F1', 'Fz', 'F2', 'F4', 'F6', 'FC5', 'FC3',
                         'FC1', 'FCz', 'FC2', 'FC4', 'FC6', 'C5', 'C3', 'C1', 'Cz', 'C2', 'C4', 'C6', 'CP5', 'CP3',
                         'CP1', 'CPz', 'CP2', 'CP4', 'CP6', 'M1', 'M2']  # 35 ch
-        return {'sampleRate': self.BSampleRate, 'channel_num': self.channel_num, 'channel_list': channel_list}
+        return {'sample_rate': self.BSampleRate, 'channel_num': self.channel_num, 'channel_list': channel_list}
 
     def _send_command_to_ns(self, ctrcode, reqnum):
         a = 'CTRL'
@@ -105,8 +105,8 @@ class NSDataReaderRandom(object):
         self.signal.append(data)
         self.data_time.append(time())
 
-    def get_ns_signal(self, publisher, duration=None):
-        publisher.ns_signal = np.array(self.signal[duration] if duration else self.signal)
+    def get_ns_signal(self, duration=None):
+        return np.array(self.signal[duration] if duration else self.signal)
 
     def get_head_settings(self):
-        return {'sampleRate': self.fs, 'channel_num': self.ch_num, 'channel_list': []}
+        return {'sample_rate': self.fs, 'channel_num': self.ch_num, 'channel_list': []}

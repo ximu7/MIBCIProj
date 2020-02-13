@@ -7,33 +7,32 @@ from NSDataReader import RepeatingTimer
 class Processor(object):
     def __init__(self, pybus, main_cfg):
         self.pybus = pybus
-        self.is_online = main_cfg.is_online
         self.class_list = main_cfg.stim_cfg.class_list
         self.model_path = main_cfg.subject.get_model_path()
         self.save_path = main_cfg.subject.get_date_dir()
-        self.online_timer = RepeatingTimer(0.1, self.online_run)
+        self.epoch_dur = 0.1  # 每多少秒判断一次
+        self.proc_bar_len = main_cfg.stim_cfg.display_cue_duration/self.epoch_dur
+        self.online_timer = RepeatingTimer(self.epoch_dur, self.online_run)
         self.signal = None
-        self.ns_signal = None
         self.predict_state = False
-        self.is_feedback = False
+        self.is_rest = False
         self.trial_num = 0
-        self.right_num_onerun = []
+        self.right_num_one_run = []
         self.right_num_all = []
         self.result_log = []
 
     def start(self):
-        if self.is_online:
-            file = open(self.model_path, 'rb')
-            self.clf = pickle.load(file)
-            self.online_timer.start()
+        file = open(self.model_path, 'rb')
+        self.clf = pickle.load(file)
+        self.online_timer.start()
+        ns_header = self.pybus.publish(self, BCIEvent.readns_header)
+        self.fs = ns_header['sample_rate']
 
     def handle_stim(self, stim):
-        if not self.is_online:
-            return
         if stim in self.class_list:
             self.label = stim
             self.label_y = self.class_list.index(stim)
-            self.is_feedback = False if stim == 'rest' else True
+            self.is_rest = True if stim == 'rest' else True
             return
         if stim == StimType.StartOfTrial:
             self.predict_state = True
@@ -47,18 +46,21 @@ class Processor(object):
 
     def online_run(self):
         if self.predict_state:
-            self.pybus.publish(self, BCIEvent.readns, self, duration=500)
-            result = self.clf.online_predict(self.ns_signal)
+            signal = self.pybus.publish(self, BCIEvent.readns, duration=500)
+            result = self.clf.online_predict(signal, self.fs)
             predict_right = 1 if result == self.label_y else 0
-            self.right_num_onerun.append(predict_right)
-            if self.is_feedback and (len(self.right_num_onerun) == 1 or self.right_num_onerun[-2] != predict_right):
-                self.pybus.publish(self, BCIEvent.online_predict, bool(predict_right))
+            self.right_num_one_run.append(predict_right)
+            if predict_right:
+                score = sum(self.right_num_one_run) / self.proc_bar_len
+                self.pybus.publish(self, BCIEvent.online_progressbar, score)
+            if not self.is_rest and (len(self.right_num_one_run) == 1 or self.right_num_one_run[-2] != predict_right):
+                self.pybus.publish(self, BCIEvent.online_ctrl, bool(predict_right))
 
     def get_result_log(self):
-        epoch_num = len(self.right_num_onerun)
-        one_run_acc = sum(self.right_num_onerun) / epoch_num
-        self.right_num_all.extend(self.right_num_onerun)
-        self.right_num_onerun = []
+        epoch_num = len(self.right_num_one_run)
+        one_run_acc = sum(self.right_num_one_run) / epoch_num
+        self.right_num_all.extend(self.right_num_one_run)
+        self.right_num_one_run = []
         all_acc = one_run_acc if len(self.right_num_all) == 0 else sum(self.right_num_all) / len(self.right_num_all)
         self.trial_num = self.trial_num + 1
         print('————————————')
@@ -69,7 +71,6 @@ class Processor(object):
         print(one_run_log)
 
     def save_log(self):
-        if self.is_online:
-            path = strftime(self.save_path + "//onlineResult_%Y%m%d_%H%M_%S.txt")
-            with open(path, 'a') as f:
-                f.writelines(self.result_log)
+        path = strftime(self.save_path + "//onlineResult_%Y%m%d_%H%M_%S.txt")
+        with open(path, 'a') as f:
+            f.writelines(self.result_log)

@@ -2,12 +2,14 @@ from enum import Enum
 
 
 class BCIEvent(Enum):
-    readns = 1
-    change_stim = 2
-    online_predict = 3
-    gaze_focus = 4
-    cue_disconnect = 5
-    save_data = 6
+    readns_header = 1
+    readns = 2
+    change_stim = 3
+    online_progressbar = 4
+    online_ctrl = 5
+    gaze_focus = 6
+    cue_disconnect = 7
+    save_data = 8
 
 
 classStimList = ('left', 'right', 'rest')
