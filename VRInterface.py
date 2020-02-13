@@ -1,7 +1,7 @@
 import json
 import zmq
 from CueInterface import CueInterface
-from BCIEnum import StimType
+from BCIEnum import StimType, BCIEvent
 
 
 class VRInterface(CueInterface):
@@ -50,6 +50,7 @@ class VRInterface(CueInterface):
             return
         if stim == StimType.ExperimentStop:
             self.send_message({'Type': 'ExpStop'})
+            self.pybus.publish(self, BCIEvent.cue_disconnect)
             return
 
     def send_message(self, message):
