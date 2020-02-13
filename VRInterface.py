@@ -31,27 +31,34 @@ class VRInterface(CueInterface):
             self.class_name = stim
             return
         if stim == StimType.ExperimentStart:
-            self.send_message({'Type': 'ExpStart'})
+            self.stim_to_message('ExpStart', '', '', False)
+            return
+        if stim == StimType.StartOfTrial:
+            self.stim_to_message('StartTrial', '', '', False)
             return
         if stim == StimType.MoveUp:
-            self.send_message({'Type': 'MoveUp', 'Side': self.class_name, 'Music': 'move'})
+            self.stim_to_message('MoveUp', self.class_name, 'move', self.is_online)
             return
         if stim == StimType.MoveDown:
-            self.send_message({'Type': 'MoveDown', 'Side': self.class_name})
+            self.stim_to_message('MoveDown', self.class_name, '', self.is_online)
             return
         if stim == StimType.Still:
-            self.send_message({'Type': 'Still', 'Music': 'relax'})
+            self.stim_to_message('Still', '', 'relax', False)
             return
         if stim == StimType.EyeGaze:
             self.send_focus_request(self.gaze_pos[self.class_name])
             return
         if stim == StimType.EndOfTrial:
-            self.send_message({'Type': 'EndTrial', 'Side': self.class_name, 'Music': 'stop'})
+            self.stim_to_message('EndTrial', self.class_name, 'stop', False)
             return
         if stim == StimType.ExperimentStop:
-            self.send_message({'Type': 'ExpStop'})
+            self.stim_to_message('ExpStop', '', '', False)
             self.pybus.publish(self, BCIEvent.cue_disconnect)
             return
+
+    def stim_to_message(self, stimtype, side, music, online):
+        message = {'Type': stimtype, 'Side': side, 'Music': music, 'Online': online}
+        self.send_message(message)
 
     def send_message(self, message):
         myjson = json.dumps(message)
