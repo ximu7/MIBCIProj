@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from time import strftime, sleep
 from BCIEnum import BCIEvent
 from utils import PyEventBus
@@ -43,17 +44,18 @@ class Pipeline(object):
             self.processor.start()
 
     def save_data(self):
-        ns_header = self.ns_reader.get_head_settings()
+        header_dict = self.ns_reader.get_head_settings()
         ns_signal = self.ns_reader.get_ns_signal()
         data_time = self.ns_reader.data_time
         first_time, last_time = data_time[0], data_time[-1]
         data_time = np.linspace(0, last_time - first_time, ns_signal.shape[0])
         class_list = np.array(self.stim.class_list)
         class_list[:, 0] = class_list[:, 0] - first_time
-        event_list = np.array(self.stim.event_list)
-        event_list[:, 0] = event_list[:, 0] - first_time
-        event_id = self.stim_cfg.get_class_dict()
-        events = np.zeros([class_list.shape[0], 3])
+        stim_log = pd.DataFrame(self.stim.stim_list)
+        stim_log.iloc[:, 0] = stim_log.iloc[:, 0] - first_time
+        event_id_dict = self.stim_cfg.get_class_dict()
+        stim_pram_dict = self.stim_cfg.get_stim_pram()
+        events = np.zeros([class_list.shape[0], 3], dtype=np.int)
         events[:, 2] = class_list[:, 1]
         k = 0
         for i in range(class_list.shape[0]):
@@ -64,7 +66,8 @@ class Pipeline(object):
                     events[i, 0] = j - 1 if v1 < v2 else j
                     k = j - 1
                     break
-        np.savez_compressed(strftime(self.save_data_path + "//" + self.filename + "NS_%Y%m%d_%H%M_%S"),
-                 signal=ns_signal, ns_header=ns_header, event_id=event_id, events=events,
-                 class_list=class_list, event_list=event_list)
+        path = strftime(self.save_data_path + "//" + self.filename + "NS_%Y%m%d_%H%M_%S")
+        np.savez(path, signal=ns_signal, events=events, event_id_dict=event_id_dict,
+                            header_dict=header_dict, stim_pram_dict=stim_pram_dict, stim_log=stim_log)
+        print('Signal data saved successfully.')
 

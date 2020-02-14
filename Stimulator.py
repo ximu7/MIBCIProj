@@ -11,7 +11,7 @@ class Stimulator(object):
         self.stim_config = stim_cfg
         self.pybus = pybus
         self.class_list = list()
-        self.event_list = list()
+        self.stim_list = list()
         self.stim_sequence = list()
         self.thread_stim = Thread(target=self.stim_run)
         self.wait_event = Event()
@@ -26,7 +26,7 @@ class Stimulator(object):
         for i in range(len(self.stim_sequence)):
             stim, duration = self.stim_sequence[i]
             if stim in StimType:
-                self.event_list.append([time(), stim.value])
+                self.stim_list.append([time(), stim.name])
                 # print(time(), stim.name)
             else:
                 self.class_list.append([time(), self.class_dict[stim]])
@@ -40,12 +40,11 @@ class Stimulator(object):
                 # sleep(duration)
             else:
                 self.wait_event.wait()
-        self.stop_stim()
 
     def get_gaze(self):
         self.wait_event.set()
 
-    def stop_stim(self):
-        self.event_list.append((time(), StimType.Disconnect.value))
+    def stop_stim(self):  # 界面中断
+        self.stim_list.append((time(), StimType.Disconnect.value))
         self.pybus.publish(self, BCIEvent.save_data)
         # self.thread_stim.join()

@@ -65,7 +65,7 @@ class StimConfig(object):
     def get_class_dict(self):
         return {x: i for i, x in enumerate(self.class_list)}
 
-    def get_stimcfg_log(self):
+    def get_stim_pram(self):
         return {'class_list': self.class_list,
                 'each_class_num': self.each_class_num,
                 'baseline_duration': self.baseline_duration,

@@ -45,7 +45,7 @@ class NSDataReader(object):
              self.BlockPnts, self.BSampleRate, self.BDataSize,
              self.BResolution) = struct.unpack_from('<iiiiiif', self.BasicInfo, 12)
             self.pattern = '<h' if self.BDataSize == 2 else '<i'
-            self.channel_num = self.BEegChannelNum + self.BEventChannelNum
+            self.ch_num = self.BEegChannelNum + self.BEventChannelNum
             # self.T = self.BlockPnts / self.BSampleRate / 2
         self._send_command_to_ns(2, 1)
         self._send_command_to_ns(3, 3)
@@ -60,7 +60,7 @@ class NSDataReader(object):
         while len(data) < size:
             data += self.socket.recv(size - len(data))
         data = [i[0] * self.BResolution for i in struct.iter_unpack(self.pattern, data)]
-        self.signal += [data[i: i + self.channel_num] for i in range(0, len(data), self.channel_num)]
+        self.signal += [data[i: i + self.ch_num] for i in range(0, len(data), self.ch_num)]
         self.data_time.append(time())
 
     def stop_data_reader(self):
@@ -72,13 +72,14 @@ class NSDataReader(object):
         self.socket.close()
 
     def get_ns_signal(self, duration=None):
-        return np.array(self.signal[duration] if duration else self.signal)
+        signal = np.array(self.signal)
+        return signal[-duration:, 0:-1] if duration else signal[:, 0:-1]  # remove label column
 
     def get_head_settings(self):
         channel_list = ['FP1', 'FPz', 'FP2', 'AF3', 'AF4', 'F5', 'F3', 'F1', 'Fz', 'F2', 'F4', 'F6', 'FC5', 'FC3',
                         'FC1', 'FCz', 'FC2', 'FC4', 'FC6', 'C5', 'C3', 'C1', 'Cz', 'C2', 'C4', 'C6', 'CP5', 'CP3',
                         'CP1', 'CPz', 'CP2', 'CP4', 'CP6', 'M1', 'M2']  # 35 ch
-        return {'sample_rate': self.BSampleRate, 'channel_num': self.channel_num, 'channel_list': channel_list}
+        return {'sample_rate': self.BSampleRate, 'channel_list': channel_list}
 
     def _send_command_to_ns(self, ctrcode, reqnum):
         a = 'CTRL'
@@ -94,19 +95,20 @@ class NSDataReaderRandom(object):
         self.ch_num = 8
         self.signal = []
         self.data_time = []
-        self.fs = 50  # 数据生成速度无法达到500采样
-        self.repeat_timer = RepeatingTimer(1.0/self.fs, self._read_data)
+        self.fs = 500  # 数据生成速度无法达到500采样
+        self.repeat_timer = RepeatingTimer(0.1, self._read_data)
 
     def start(self):
         self.repeat_timer.start()
 
     def _read_data(self):
-        data = -5 + 10 * np.random.random([self.ch_num])
-        self.signal.append(data)
+        data = (10 * np.random.randn(400)).tolist()  # 格式不对
+        self.signal += [data[i: i + self.ch_num] for i in range(0, len(data), self.ch_num)]
         self.data_time.append(time())
 
     def get_ns_signal(self, duration=None):
-        return np.array(self.signal[duration] if duration else self.signal)
+        signal = np.array(self.signal)
+        return signal[-duration:, 0:-1] if duration else signal[:, 0:-1]  # remove label column
 
     def get_head_settings(self):
-        return {'sample_rate': self.fs, 'channel_num': self.ch_num, 'channel_list': []}
+        return {'sample_rate': self.fs, 'channel_list': ['FP1', 'FPz', 'FP2', 'AF3', 'AF4', 'F5', 'F3', 'F1']}

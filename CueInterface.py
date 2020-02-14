@@ -127,6 +127,7 @@ class CueInterface(object):
 
     def send_clear(self):
         self.send_stim(None, None, False)
+        self.send_progress(0)
 
     def send_focus_request(self, gaze_position):
         self.send_message({'Type': 'focus', 'GazePosition': gaze_position})

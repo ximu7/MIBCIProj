@@ -12,8 +12,7 @@ def loadnpz(filepath):
     data_x: T×N×L ndarray T: 采样点数  N: 通道数  L: 训练数据 trial 总数
     data_y: shape (n_samples,) L 个 trial 对应的标签
     """
-    # Data, index, fs = load_rawdata_from_npz(filepath)
-    Data, index, fs = load_new_npz(filepath)
+    Data, index, fs = load_rawdata_from_npz(filepath)
     cue_list = [769, 770, 775]
     data_x, data_y = epoch_from_cuelist(Data, index, fs, cue_list)
     return data_x, data_y, fs
@@ -31,15 +30,6 @@ def load_rawdata_from_npz(filepath):
     Fs = np.squeeze(Fs)
     return Data, index, Fs
 
-def load_new_npz(filepath):
-    # Data (samples, channels)
-    # index 第一列 时间idx，第二列 cue
-    BPdata = np.load(filepath)
-    fs = BPdata.f.ns_header['sample_rate']
-    events = BPdata.f.events
-    Data = BPdata.f.signal
-    Data = Data[:, 0:-1]
-    return Data, events, fs
 
 def epoch_from_cuelist(Data, index, fs, cue_list, before_cue=0):
     # input Data(samples, channels)
