@@ -22,8 +22,8 @@ class Processor(object):
         self.result_log = []
 
     def start(self):
-        file = open(self.model_path, 'rb')
-        self.clf = pickle.load(file)
+        with open(self.model_path, 'rb') as f:
+            self.clf = pickle.load(f)
         self.online_timer.start()
         ns_header = self.pybus.publish(self, BCIEvent.readns_header)
         self.fs = ns_header['sample_rate']

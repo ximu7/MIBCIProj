@@ -64,7 +64,7 @@ class ExoskeletonWindow(wx.Dialog):
 
     def on_submit(self, event):
         self.get_value()
-        if self.exo.Connected is True:
+        if self.exo.Connected == True:
             self.exo.disconnect_com()
         self.Close()  # 关闭窗体
 

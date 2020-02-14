@@ -25,7 +25,7 @@ class Stimulator(object):
     def stim_run(self):
         for i in range(len(self.stim_sequence)):
             stim, duration = self.stim_sequence[i]
-            if stim in StimType:
+            if stim in (s for s in StimType):
                 self.stim_list.append([time(), stim.name])
                 # print(time(), stim.name)
             else:
@@ -35,7 +35,7 @@ class Stimulator(object):
             if stim == StimType.ExperimentStop:
                 self.pybus.publish(self, BCIEvent.save_data)
             self.wait_event.clear()
-            if duration is not None:
+            if duration != None:
                 self.wait_event.wait(duration)
                 # sleep(duration)
             else:

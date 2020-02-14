@@ -126,25 +126,27 @@ class MainWindow(wx.Frame):
 
     def on_affected_side_change(self, event):
         affected_side = self.affectedSideCtrl.GetStringSelection()
-        self.subject.set_affected_side('left' if affected_side == '左' else 'right')
+        self.subject.affected_side = 'left' if affected_side == '左' else 'right'
 
     def on_load_param(self, event):
         subject_name = self.subjectNameCtrl.GetStringSelection()
         self.subject.set_subject(subject_name)
         param_path = self.subject.get_param_path()
         if os.path.exists(param_path):
-            with open(param_path, 'rb') as file:
-                self.subject = pickle.loads(file.read())
-            self.statusBar.SetStatusText(r'参数载入成功')
+            if os.path.getsize(param_path) > 0:
+                with open(param_path, 'rb') as f:
+                    self.subject = pickle.load(f)
+                    self.stim_cfg = pickle.load(f)
+                self.statusBar.SetStatusText(r'参数载入成功')
             self.affectedSideCtrl.SetStringSelection('左' if self.subject.affected_side == 'left' else '右')
         else:
             self.statusBar.SetStatusText(r'未保存参数文件')
 
     def on_save_param(self, event):
         if self.subject.subject_name:
-            output = open(self.subject.get_param_path(), 'wb')
-            pickle.dumps(self.subject, output)
-            output.close()
+            with open(self.subject.get_param_path(), 'wb') as f:
+                f.write(pickle.dumps(self.subject))
+                f.write(pickle.dumps(self.stim_cfg))
             self.statusBar.SetStatusText(r'参数文件保存成功')
         else:
             self.statusBar.SetStatusText(r'未选择被试')

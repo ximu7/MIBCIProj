@@ -102,7 +102,7 @@ class NSDataReaderRandom(object):
         self.repeat_timer.start()
 
     def _read_data(self):
-        data = (10 * np.random.randn(400)).tolist()  # 格式不对
+        data = (10 * np.random.randn(400)).tolist()
         self.signal += [data[i: i + self.ch_num] for i in range(0, len(data), self.ch_num)]
         self.data_time.append(time())
 

@@ -121,7 +121,7 @@ class Exoskeleton(object):
                 print(reciprocate_command)
                 time.sleep(5)
         except:
-            print("Exoskeleton is not connected.")
+            print("Exoskeleton not connected.")
 
     # 停止运动
     def exoskeleton_stop(self):

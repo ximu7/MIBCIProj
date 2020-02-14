@@ -137,7 +137,7 @@ def sliding_window(data_x, data_y=None, filter_bank=False):
                 for i in range(epoch_num):
                     start = int(i * step + delay)
                     data_x_epoch[:, :, b, i] = data_x[start:start + window_size, :, b]
-            if data_y is not None:
+            if data_y != None:
                 data_y_epoch = np.array([data_y, ] * epoch_num)
                 return data_x_epoch, data_y_epoch
             else:
@@ -169,7 +169,7 @@ def sliding_window(data_x, data_y=None, filter_bank=False):
             for i in range(epoch_num):
                 start = int(i * step + delay)
                 data_x_epoch[:, :, i] = data_x[start:start + window_size, :]
-            if data_y is not None:
+            if data_y != None:
                 data_y_epoch = np.array([data_y, ] * epoch_num)
                 return data_x_epoch, data_y_epoch
             else:
