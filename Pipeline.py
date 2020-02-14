@@ -68,6 +68,6 @@ class Pipeline(object):
                     break
         path = strftime(self.save_data_path + "//" + self.filename + "NS_%Y%m%d_%H%M_%S")
         np.savez(path, signal=ns_signal, events=events, event_id_dict=event_id_dict,
-                            header_dict=header_dict, stim_pram_dict=stim_pram_dict, stim_log=stim_log)
+                header_dict=header_dict, stim_pram_dict=stim_pram_dict, stim_log=stim_log)
         print('Signal data saved successfully.')
 
