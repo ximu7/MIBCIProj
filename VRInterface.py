@@ -1,5 +1,6 @@
 import json
 import zmq
+import subprocess
 from CueInterface import CueInterface
 from BCIEnum import StimType, BCIEvent
 
@@ -9,22 +10,21 @@ class VRInterface(CueInterface):
         super(VRInterface, self).__init__(pybus, main_cfg)
         self.PUB_address = 'tcp://*:12345'
         self.REP_address = 'tcp://*:12346'
-        self.connected = False
+        self.pname = 'D:\\Users\\63518\\UnityEXE\\3\\Unity3D FPS Handy Hands.exe'
 
     def start(self):
-        if not self.connected:
-            context = zmq.Context()
-            self.pub = context.socket(zmq.PUB)
-            self.pub.bind(self.PUB_address)
-            self.rep = context.socket(zmq.REP)
-            self.rep.bind(self.REP_address)
-            while True:
-                recv_msg = self.rep.recv_string()
-                if recv_msg == 'connect request':
-                    print(recv_msg)
-                    self.rep.send_string('OK')
-                    break
-            self.connected = True
+        subprocess.Popen(self.pname)
+        context = zmq.Context()
+        self.pub = context.socket(zmq.PUB)
+        self.rep = context.socket(zmq.REP)
+        self.pub.bind(self.PUB_address)
+        self.rep.bind(self.REP_address)
+        while True:
+            recv_msg = self.rep.recv_string()
+            if recv_msg == 'connect request':
+                print(recv_msg)
+                self.rep.send_string('OK')
+                break
 
     def handle_stim(self, stim):
         if stim in self.class_list:
@@ -43,7 +43,7 @@ class VRInterface(CueInterface):
             self.stim_to_message('MoveDown', self.class_name, '', self.is_online)
             return
         if stim == StimType.Still:
-            self.stim_to_message('Still', '', 'relax', False)
+            self.stim_to_message('Still', '', 'relax', self.is_online)
             return
         if stim == StimType.EyeGaze:
             self.send_focus_request(self.gaze_pos[self.class_name])
@@ -54,6 +54,8 @@ class VRInterface(CueInterface):
         if stim == StimType.ExperimentStop:
             self.stim_to_message('ExpStop', '', '', False)
             self.pybus.publish(self, BCIEvent.cue_disconnect)
+            self.rep.close()
+            self.pub.close()
             return
 
     def stim_to_message(self, stimtype, side, music, online):
@@ -63,3 +65,6 @@ class VRInterface(CueInterface):
     def send_message(self, message):
         myjson = json.dumps(message)
         self.pub.send_string(myjson)
+
+    def send_animation_ctrl(self, is_stop):
+        self.send_message({'Type': 'animation_ctrl', 'Stop': is_stop, 'Online': True})
