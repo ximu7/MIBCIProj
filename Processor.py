@@ -1,12 +1,13 @@
 import pickle
+from utils import PyPublisher
 from time import time, strftime
 from BCIEnum import BCIEvent, StimType
 from NSDataReader import RepeatingTimer
 
 
-class Processor(object):
-    def __init__(self, pybus, main_cfg):
-        self.pybus = pybus
+class Processor(PyPublisher):
+    def __init__(self, main_cfg):
+        PyPublisher.__init__(self)
         self.class_list = main_cfg.stim_cfg.class_list
         self.model_path = main_cfg.subject.get_model_path()
         self.save_path = main_cfg.subject.get_date_dir()
@@ -25,7 +26,7 @@ class Processor(object):
         with open(self.model_path, 'rb') as f:
             self.clf = pickle.load(f)
         self.online_timer.start()
-        ns_header = self.pybus.publish(self, BCIEvent.readns_header)
+        ns_header = self.publish(BCIEvent.readns_header)
         self.fs = ns_header['sample_rate']
 
     def handle_stim(self, stim):
@@ -44,15 +45,15 @@ class Processor(object):
 
     def online_run(self):
         if self.predict_state:
-            signal = self.pybus.publish(self, BCIEvent.readns, duration=500)
+            signal = self.publish(BCIEvent.readns, duration=500)
             result = self.clf.online_predict(signal, self.fs)
             predict_right = 1 if result == self.label_y else 0
             self.right_num_one_run.append(predict_right)
             if predict_right:
                 score = sum(self.right_num_one_run) / self.proc_bar_len
-                self.pybus.publish(self, BCIEvent.online_progressbar, score)
+                self.publish(BCIEvent.online_progressbar, score)
             if not self.is_rest and (len(self.right_num_one_run) == 1 or self.right_num_one_run[-2] != predict_right):
-                self.pybus.publish(self, BCIEvent.online_ctrl, bool(predict_right))
+                self.publish(BCIEvent.online_ctrl, bool(predict_right))
 
     def get_result_log(self):
         epoch_num = len(self.right_num_one_run)

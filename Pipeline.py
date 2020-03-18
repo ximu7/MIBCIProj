@@ -11,29 +11,28 @@ from CueInterface import CueInterface
 
 class Pipeline(object):
     def __init__(self, main_cfg):
-        pybus = PyEventBus()
         # self.ns_reader = NSDataReader()
         self.ns_reader = NSDataReaderRandom()
         self.is_online = main_cfg.is_online
-        self.cue = CueInterface(pybus, main_cfg)
-        self.stim = Stimulator(pybus, main_cfg.stim_cfg)
+        self.cue = CueInterface(main_cfg)
+        self.stim = Stimulator(main_cfg.stim_cfg)
         self.save_data_path = main_cfg.subject.get_date_dir()
         self.filename = 'online' if main_cfg.is_online else 'acquire'
         self.stim_cfg = main_cfg.stim_cfg
-        pybus.subscribe(self.stim, BCIEvent.change_stim, self.cue, self.cue.handle_stim)
-        pybus.subscribe(self.stim, BCIEvent.change_stim, main_cfg.exo, main_cfg.exo.handle_stim)
-        pybus.subscribe(self.cue, BCIEvent.gaze_focus, self.stim, self.stim.get_gaze)
-        pybus.subscribe(self.cue, BCIEvent.cue_disconnect, self.stim, self.stim.stop_stim)
-        pybus.subscribe(self.stim, BCIEvent.save_data, self, self.save_data)
+        self.stim.subscribe(BCIEvent.change_stim, self.cue.handle_stim)
+        self.stim.subscribe(BCIEvent.change_stim, main_cfg.exo.handle_stim)
+        self.cue.subscribe(BCIEvent.gaze_focus, self.stim.get_gaze)
+        self.cue.subscribe(BCIEvent.cue_disconnect, self.stim.stop_stim)
+        self.stim.subscribe(BCIEvent.save_data, self.save_data)
         if self.is_online:
-            self.processor = Processor(pybus, main_cfg)
-            pybus.subscribe(self.processor, BCIEvent.readns_header, self.ns_reader, self.ns_reader.get_head_settings)
-            pybus.subscribe(self.processor, BCIEvent.readns, self.ns_reader, self.ns_reader.get_ns_signal)
-            pybus.subscribe(self.stim, BCIEvent.change_stim, self.processor, self.processor.handle_stim)
-            pybus.subscribe(self.processor, BCIEvent.online_progressbar, self.cue, self.cue.send_progress)
-            pybus.subscribe(self.processor, BCIEvent.online_ctrl, self.cue, self.cue.online_feedback)
-            pybus.subscribe(self.processor, BCIEvent.online_ctrl, main_cfg.exo, main_cfg.exo.online_feedback)
-            pybus.subscribe(self.stim, BCIEvent.save_data, self.processor, self.processor.save_log)
+            self.processor = Processor(main_cfg)
+            self.processor.subscribe(BCIEvent.readns_header, self.ns_reader.get_head_settings)
+            self.processor.subscribe(BCIEvent.readns, self.ns_reader.get_ns_signal)
+            self.stim.subscribe(BCIEvent.change_stim, self.processor.handle_stim)
+            self.processor.subscribe(BCIEvent.online_progressbar, self.cue.send_progress)
+            self.processor.subscribe(BCIEvent.online_ctrl, self.cue.online_feedback)
+            self.processor.subscribe(BCIEvent.online_ctrl, main_cfg.exo.online_feedback)
+            self.stim.subscribe(BCIEvent.save_data, self.processor.save_log)
 
     def start(self):
         self.ns_reader.start()

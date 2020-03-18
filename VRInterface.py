@@ -1,12 +1,12 @@
 import json
 import zmq
-from CueInterface import CueInterface
+from CueInterface import Interface
 from BCIEnum import StimType, BCIEvent
 
 
-class VRInterface(CueInterface):
-    def __init__(self, pybus, main_cfg):
-        super(VRInterface, self).__init__(pybus, main_cfg)
+class VRInterface(Interface):
+    def __init__(self, main_cfg):
+        Interface.__init__(self, main_cfg)
         self.PUB_address = 'tcp://*:12345'
         self.REP_address = 'tcp://*:12346'
         self.connected = False
@@ -53,7 +53,7 @@ class VRInterface(CueInterface):
             return
         if stim == StimType.ExperimentStop:
             self.stim_to_message('ExpStop', '', '', False)
-            self.pybus.publish(self, BCIEvent.cue_disconnect)
+            self.publish(BCIEvent.cue_disconnect)
             return
 
     def stim_to_message(self, stimtype, side, music, online):
@@ -63,3 +63,6 @@ class VRInterface(CueInterface):
     def send_message(self, message):
         myjson = json.dumps(message)
         self.pub.send_string(myjson)
+
+    def send_focus_request(self, gaze_position):
+        pass

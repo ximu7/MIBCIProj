@@ -1,5 +1,5 @@
 class PyEventBus(object):
-    def __init__(self, ):
+    def __init__(self):
         """
         publisher:事件源
         listener:监听者
@@ -25,3 +25,28 @@ class PyEventBus(object):
         return listener in self.subscriptions and \
                event_name in self.subscriptions[listener] and \
                publisher in self.subscriptions[listener][event_name]
+
+
+class PyPublisher(object):
+    def __init__(self):
+        """
+        publisher:事件源
+        listener:监听者
+        event_name:事件id
+        """
+        self.subscriptions = {}
+
+    def subscribe(self, event_name, func):
+        if event_name not in self.subscriptions:
+            self.subscriptions[event_name] = []
+        self.subscriptions[event_name].append(func)
+
+    def publish(self, event_name, *args, **kwargs):
+        if self._has_subscription(event_name):
+            for func in self.subscriptions[event_name]:
+                result = func(*args, **kwargs)
+                if result is not None:
+                    return result
+
+    def _has_subscription(self, event_name):
+        return event_name in self.subscriptions

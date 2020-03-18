@@ -2,20 +2,26 @@ import os
 import json
 import socket
 import subprocess
+from utils import PyPublisher
 from threading import Thread, Lock
 from BCIEnum import BCIEvent, StimType
 
 
-class CueInterface(object):
-    def __init__(self, pybus, main_cfg):
-        self.state = None
-        self.pybus = pybus
+class Interface(PyPublisher):
+    def __init__(self, main_cfg):
+        PyPublisher.__init__(self)
         self.is_online = main_cfg.is_online
+        self.class_list = main_cfg.stim_cfg.class_list
+        self.gaze_pos = {'left': 'Left', 'right': 'Right', 'rest': 'Center'}
+
+class CueInterface(Interface):
+    def __init__(self, main_cfg):
+        Interface.__init__(self, main_cfg)
+        self.state = None
         self.sock = socket.socket()
         self.tcp_lock = Lock()
         self.tcp_address = "127.0.0.1", 4567
         self.tcp_recv_thread = Thread(target=self.tcp_recv)
-        self.class_list = main_cfg.stim_cfg.class_list
         self.cue_path = main_cfg.stim_cfg.cue_path
         self.is_repeat = main_cfg.stim_cfg.is_repeat
         self.move_sound_path = main_cfg.stim_cfg.move_sound_path
@@ -23,7 +29,7 @@ class CueInterface(object):
         self.stop_sound_path = main_cfg.stim_cfg.stop_sound_path
         # self.parentDir = os.path.abspath(os.getcwd())
         self.parentDir = os.getcwd()
-        self.gaze_pos = {'left': 'Left', 'right': 'Right', 'rest': 'Center'}
+
 
     def start(self):
         self.connect()
@@ -79,7 +85,7 @@ class CueInterface(object):
                 content, _ = self.conn.recvfrom(length)
                 message = json.loads(content)
                 if message['Type'] == 'focused':
-                    self.pybus.publish(self, BCIEvent.gaze_focus)  # Resume stim_cfg
+                    self.publish(BCIEvent.gaze_focus)  # Resume stim_cfg
                 elif message['Type'] == 'closed':
                     self.disconnect()
             except:
@@ -89,7 +95,7 @@ class CueInterface(object):
         self.send_animation_ctrl(is_stop=bool(1-predict))
 
     def disconnect(self):
-        self.pybus.publish(self, BCIEvent.cue_disconnect)
+        self.publish(BCIEvent.cue_disconnect)
         self.close()
 
     def close(self):

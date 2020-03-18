@@ -1,15 +1,16 @@
 from threading import Thread, Event
 from time import sleep, time
 from BCIEnum import BCIEvent, StimType
+from utils import PyPublisher
 
 
-class Stimulator(object):
-    def __init__(self, pybus, stim_cfg):
+class Stimulator(PyPublisher):
+    def __init__(self, stim_cfg):
         #  mne event (n_events, 3)
         #  first column: event time in samples
         #  third column: event id
+        PyPublisher.__init__(self)
         self.stim_config = stim_cfg
-        self.pybus = pybus
         self.class_list = list()
         self.stim_list = list()
         self.stim_sequence = list()
@@ -27,13 +28,13 @@ class Stimulator(object):
             stim, duration = self.stim_sequence[i]
             if stim in (s for s in StimType):
                 self.stim_list.append([time(), stim.name])
-                # print(time(), stim.name)
+                print(time(), stim.name)
             else:
                 self.class_list.append([time(), self.class_dict[stim]])
-                # print(time(), stim)
-            self.pybus.publish(self, BCIEvent.change_stim, stim)
+                print(time(), stim)
+            self.publish(BCIEvent.change_stim, stim)
             if stim == StimType.ExperimentStop:
-                self.pybus.publish(self, BCIEvent.save_data)
+                self.publish(BCIEvent.save_data)
             self.wait_event.clear()
             if duration != None:
                 self.wait_event.wait(duration)
@@ -46,5 +47,5 @@ class Stimulator(object):
 
     def stop_stim(self):  # 界面中断
         self.stim_list.append((time(), StimType.Disconnect.value))
-        self.pybus.publish(self, BCIEvent.save_data)
+        self.publish(BCIEvent.save_data)
         # self.thread_stim.join()
