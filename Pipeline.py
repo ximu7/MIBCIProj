@@ -7,6 +7,7 @@ from Processor import Processor
 from Stimulator import Stimulator
 from NSDataReader import NSDataReader, NSDataReaderRandom
 from CueInterface import CueInterface
+from VRInterface import VRInterface
 
 
 class Pipeline(object):
@@ -15,6 +16,7 @@ class Pipeline(object):
         self.ns_reader = NSDataReaderRandom()
         self.is_online = main_cfg.is_online
         self.cue = CueInterface(main_cfg)
+        # self.cue = VRInterface(main_cfg)
         self.stim = Stimulator(main_cfg.stim_cfg)
         self.save_data_path = main_cfg.subject.get_date_dir()
         self.filename = 'online' if main_cfg.is_online else 'acquire'
